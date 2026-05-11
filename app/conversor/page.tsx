@@ -2,6 +2,30 @@
 
 import { useState } from "react"
 import { cn } from "@/lib/utils"
+import { HelpPanel, type HelpSection } from "@/components/help-panel"
+
+const CONVERSOR_SECTIONS: HelpSection[] = [
+  {
+    heading: "Formato Decimal",
+    content: "El más común en Europa. Incluye tu stake devuelto. Cuota 2.50 significa que por cada €1 apostado recibes €2.50 (ganancia neta de €1.50).",
+    example: "Decimal 2.50 → ganancia neta €1.50 por €1 apostado",
+  },
+  {
+    heading: "Formato Fraccionaria",
+    content: "Estándar en el Reino Unido. El numerador es la ganancia neta y el denominador el stake. Evens equivale a 1/1 = decimal 2.00.",
+    example: "5/2 → por €2 apostados ganas €5 · decimal = 5÷2 + 1 = 3.50",
+  },
+  {
+    heading: "Formato Americana",
+    content: "Moneyline. Positivo (+) indica ganancia por €100 apostados. Negativo (−) indica cuánto debes apostar para ganar €100.",
+    example: "+150 → decimal 2.50 · −200 → decimal 1.50",
+  },
+  {
+    heading: "Probabilidad implícita",
+    content: "El porcentaje de probabilidad que la cuota refleja. Se calcula como 1 ÷ cuota × 100. Si tu estimación real es mayor, tienes una apuesta de valor (value bet).",
+    example: "Cuota 3.00 → prob. implícita 33.3% · Si estimas 40% → hay valor",
+  },
+]
 
 function gcd(a: number, b: number): number {
   return b < 0.001 ? a : gcd(b, a % b)
@@ -103,12 +127,15 @@ export default function ConversorPage() {
     <div>
       <div className="mb-8">
         <p className="text-sm font-semibold text-stone-400 uppercase tracking-widest mb-3">Herramienta</p>
-        <h1
-          className="font-display text-3xl font-medium text-stone-900 tracking-tight md:text-4xl"
-          style={{ fontStyle: "italic" }}
-        >
-          Conversor de Cuotas
-        </h1>
+        <div className="flex items-start gap-3">
+          <h1
+            className="font-display text-3xl font-medium text-stone-900 tracking-tight md:text-4xl"
+            style={{ fontStyle: "italic" }}
+          >
+            Conversor de Cuotas
+          </h1>
+          <HelpPanel title="Conversor de Cuotas" sections={CONVERSOR_SECTIONS} />
+        </div>
         <p className="text-base text-stone-500 mt-2">Convierte entre decimal, fraccionaria y americana en tiempo real</p>
       </div>
 

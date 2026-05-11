@@ -2,6 +2,28 @@
 
 import { useState, useMemo } from "react"
 import { cn } from "@/lib/utils"
+import { HelpPanel, type HelpSection } from "@/components/help-panel"
+
+const DUTCHING_SECTIONS: HelpSection[] = [
+  {
+    heading: "¿Qué es el dutching?",
+    content: "Distribuye tu apuesta entre varias selecciones de forma que el retorno sea idéntico independientemente de cuál gane.",
+  },
+  {
+    heading: "Cómo funciona",
+    content: "La fórmula calcula la apuesta proporcional para cada selección usando las cuotas inversas. Cuota más baja → apuesta mayor para igualar el retorno.",
+    example: "€50 en tres selecciones a 2.0, 3.0, 4.0 → apuestas €24.24 · €16.16 · €12.12 → retorno fijo €48.48",
+  },
+  {
+    heading: "Sobrerate",
+    content: "La suma de las probabilidades implícitas (1 ÷ cuota) multiplicada por 100. Si es menor de 100% hay ventaja matemática. Por encima de 100%, el mercado tiene margen y tendrás pérdida garantizada.",
+    example: "Sobrerate 98.5% → mercado favorable · Sobrerate 103% → pérdida garantizada",
+  },
+  {
+    heading: "Cuándo usar dutching",
+    content: "Útil cuando tienes una promoción de 'apuesta gratis si ganas con X selecciones' o cuando quieres cubrir varias opciones en una carrera o partido con cuotas similares.",
+  },
+]
 
 interface Selection {
   id: number
@@ -53,12 +75,15 @@ export default function DutchingPage() {
     <div>
       <div className="mb-8">
         <p className="text-sm font-semibold text-stone-400 uppercase tracking-widest mb-3">Herramienta</p>
-        <h1
-          className="font-display text-3xl font-medium text-stone-900 tracking-tight md:text-4xl"
-          style={{ fontStyle: "italic" }}
-        >
-          Dutching
-        </h1>
+        <div className="flex items-start gap-3">
+          <h1
+            className="font-display text-3xl font-medium text-stone-900 tracking-tight md:text-4xl"
+            style={{ fontStyle: "italic" }}
+          >
+            Dutching
+          </h1>
+          <HelpPanel title="Dutching" sections={DUTCHING_SECTIONS} />
+        </div>
         <p className="text-base text-stone-500 mt-2">Distribuye tu apuesta para ganar lo mismo con cualquier resultado</p>
       </div>
 

@@ -2,6 +2,33 @@
 
 import { useState, useMemo } from "react"
 import { cn } from "@/lib/utils"
+import { HelpPanel, type HelpSection } from "@/components/help-panel"
+
+const CALC_SECTIONS: HelpSection[] = [
+  {
+    heading: "¿Qué es la calculadora?",
+    content: "Calcula el lay stake óptimo para cubrir tu apuesta en el exchange y obtener el mismo resultado independientemente de qué gane.",
+  },
+  {
+    heading: "Apuesta Clasificatoria",
+    content: "Usas tu propio dinero. El objetivo es minimizar la pérdida ('qualifier loss') mientras cumples el requisito de apuesta del bono.",
+    example: "Bookie: €10 a 3.00 · Lay exchange: 3.05 al 5% → Lay stake: €9.70 · Pérdida ≈ €0.25",
+  },
+  {
+    heading: "Apuesta Gratis (Free Bet)",
+    content: "Tu stake no se devuelve si ganas (SNR — Stake Not Returned). La fórmula usa (cuota_back − 1) para reflejar esto y extraer el máximo valor.",
+    example: "Free bet €10 a 3.00 · Lay 3.05 al 5% → Lay stake: €6.30 · Beneficio ≈ €5.95",
+  },
+  {
+    heading: "Reembolso (Money Back)",
+    content: "El bookie reembolsa tu apuesta si pierde, normalmente como apuesta gratis. El reembolso suma al escenario 'lay gana'.",
+    example: "€10 a 3.00, reembolso €10 · Lay 3.05 al 5% → el escenario lay-gana mejora en €10",
+  },
+  {
+    heading: "Responsabilidad (Liability)",
+    content: "El dinero que necesitas bloquear en el exchange para cubrir el lay. Se calcula como lay_stake × (cuota_lay − 1). Asegúrate de tener saldo suficiente.",
+  },
+]
 
 type Mode = "qualifying" | "freebet" | "moneyback"
 
@@ -134,12 +161,15 @@ export default function CalculadoraPage() {
     <div>
       <div className="mb-8">
         <p className="text-sm font-semibold text-stone-400 uppercase tracking-widest mb-3">Herramienta</p>
-        <h1
-          className="font-display text-3xl font-medium text-stone-900 tracking-tight md:text-4xl"
-          style={{ fontStyle: "italic" }}
-        >
-          Calculadora
-        </h1>
+        <div className="flex items-start gap-3">
+          <h1
+            className="font-display text-3xl font-medium text-stone-900 tracking-tight md:text-4xl"
+            style={{ fontStyle: "italic" }}
+          >
+            Calculadora
+          </h1>
+          <HelpPanel title="Calculadora" sections={CALC_SECTIONS} />
+        </div>
         <p className="text-base text-stone-500 mt-2">Calcula el lay stake y beneficio esperado</p>
       </div>
 
