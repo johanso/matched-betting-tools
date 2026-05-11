@@ -29,21 +29,12 @@ const MOCK_DATA: Match[] = [
 
 type SortKey = "event" | "sport" | "backOdds" | "layOdds" | "rating" | "profit"
 type SortDir = "asc" | "desc"
-
 const SPORTS = ["Todos", "Fútbol", "Tenis", "Baloncesto", "Motor", "Ciclismo"]
 
-function ratingColor(r: number) {
-  if (r >= 98) return "text-emerald-400"
-  if (r >= 97) return "text-yellow-400"
-  return "text-zinc-400"
-}
-
-function SortIcon({ active, dir }: { active: boolean; dir: SortDir }) {
-  return (
-    <span className={cn("inline-block ml-1 text-[9px]", active ? "text-white" : "text-zinc-600")}>
-      {active ? (dir === "asc" ? "↑" : "↓") : "↕"}
-    </span>
-  )
+function ratingStyle(r: number) {
+  if (r >= 98) return "bg-emerald-50 text-emerald-700 border-emerald-200"
+  if (r >= 97) return "bg-amber-50 text-amber-700 border-amber-200"
+  return "bg-stone-100 text-stone-500 border-stone-200"
 }
 
 export default function OddsMatcherPage() {
@@ -52,138 +43,134 @@ export default function OddsMatcherPage() {
   const [sortDir, setSortDir] = useState<SortDir>("desc")
 
   function handleSort(key: SortKey) {
-    if (sortKey === key) {
-      setSortDir((d) => (d === "asc" ? "desc" : "asc"))
-    } else {
-      setSortKey(key)
-      setSortDir("desc")
-    }
+    if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"))
+    else { setSortKey(key); setSortDir("desc") }
   }
 
   const data = useMemo(() => {
-    let filtered = sport === "Todos" ? MOCK_DATA : MOCK_DATA.filter((m) => m.sport === sport)
+    const filtered = sport === "Todos" ? MOCK_DATA : MOCK_DATA.filter((m) => m.sport === sport)
     return [...filtered].sort((a, b) => {
       const ra = (a.backOdds / a.layOdds) * 100
       const rb = (b.backOdds / b.layOdds) * 100
-      const va = sortKey === "rating" ? ra : sortKey === "event" || sortKey === "sport" ? 0 : (a as never)[sortKey] as number
-      const vb = sortKey === "rating" ? rb : sortKey === "event" || sortKey === "sport" ? 0 : (b as never)[sortKey] as number
-
       if (sortKey === "event") return sortDir === "asc" ? a.event.localeCompare(b.event) : b.event.localeCompare(a.event)
       if (sortKey === "sport") return sortDir === "asc" ? a.sport.localeCompare(b.sport) : b.sport.localeCompare(a.sport)
+      const va = sortKey === "rating" ? ra : (a[sortKey as keyof Match] as number)
+      const vb = sortKey === "rating" ? rb : (b[sortKey as keyof Match] as number)
       return sortDir === "asc" ? va - vb : vb - va
     })
   }, [sport, sortKey, sortDir])
 
-  const colHeader = (label: string, key: SortKey) => (
-    <th
-      className="text-left text-[11px] font-medium text-zinc-500 pb-3 cursor-pointer hover:text-zinc-300 transition-colors whitespace-nowrap select-none"
-      onClick={() => handleSort(key)}
-    >
-      {label}
-      <SortIcon active={sortKey === key} dir={sortDir} />
-    </th>
-  )
+  const avgRating = data.length ? data.reduce((s, m) => s + (m.backOdds / m.layOdds) * 100, 0) / data.length : 0
+
+  function Th({ label, k }: { label: string; k: SortKey }) {
+    const active = sortKey === k
+    return (
+      <th
+        onClick={() => handleSort(k)}
+        className="text-left py-3.5 px-4 text-xs font-semibold text-stone-500 cursor-pointer hover:text-stone-800 select-none uppercase tracking-wider transition-colors whitespace-nowrap"
+      >
+        {label}
+        <span className={cn("ml-1.5", active ? "text-stone-700" : "text-stone-300")}>
+          {active ? (sortDir === "asc" ? "↑" : "↓") : "↕"}
+        </span>
+      </th>
+    )
+  }
 
   return (
     <div>
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-white">OddsMatcher</h1>
-          <p className="text-zinc-400 text-sm mt-1">Encuentra las mejores oportunidades de matched betting</p>
-        </div>
-
-        {/* Sport filter */}
-        <div className="flex flex-wrap gap-1.5">
-          {SPORTS.map((s) => (
-            <button
-              key={s}
-              onClick={() => setSport(s)}
-              className={cn(
-                "px-3 py-1 rounded-md text-xs font-medium transition-colors border",
-                sport === s
-                  ? "bg-white text-black border-white"
-                  : "border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200"
-              )}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
+      <div className="mb-8">
+        <p className="text-sm font-semibold text-stone-400 uppercase tracking-widest mb-3">Herramienta</p>
+        <h1
+          className="font-display text-3xl font-medium text-stone-900 tracking-tight md:text-4xl"
+          style={{ fontStyle: "italic" }}
+        >
+          OddsMatcher
+        </h1>
+        <p className="text-base text-stone-500 mt-2">Encuentra las mejores oportunidades de matched betting</p>
       </div>
 
-      {/* Stats row */}
-      <div className="grid grid-cols-3 gap-3 mb-4">
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-3 mb-5">
         {[
           { label: "Eventos", value: data.length.toString() },
-          {
-            label: "Rating promedio",
-            value: data.length
-              ? ((data.reduce((s, m) => s + (m.backOdds / m.layOdds) * 100, 0) / data.length).toFixed(1) + "%")
-              : "—",
-          },
-          {
-            label: "Mejor rating",
-            value: data.length
-              ? (Math.max(...data.map((m) => (m.backOdds / m.layOdds) * 100)).toFixed(1) + "%")
-              : "—",
-          },
-        ].map((stat) => (
-          <div key={stat.label} className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3">
-            <div className="text-xs text-zinc-500 mb-0.5">{stat.label}</div>
-            <div className="text-sm font-mono font-semibold text-white">{stat.value}</div>
+          { label: "Rating medio", value: data.length ? avgRating.toFixed(1) + "%" : "—" },
+          { label: "Mejor rating", value: data.length ? Math.max(...data.map((m) => (m.backOdds / m.layOdds) * 100)).toFixed(1) + "%" : "—" },
+        ].map((s) => (
+          <div key={s.label} className="rounded-xl border border-stone-200 bg-white px-5 py-4 shadow-sm">
+            <p className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-1.5">{s.label}</p>
+            <p className="text-2xl font-mono font-bold text-stone-900">{s.value}</p>
           </div>
         ))}
       </div>
 
+      {/* Sport filters */}
+      <div className="flex flex-wrap gap-2 mb-5">
+        {SPORTS.map((s) => (
+          <button
+            key={s}
+            onClick={() => setSport(s)}
+            className={cn(
+              "px-4 py-2 rounded-full text-sm font-medium transition-all border",
+              sport === s
+                ? "bg-stone-900 text-white border-stone-900"
+                : "bg-white border-stone-200 text-stone-600 hover:border-stone-400 hover:text-stone-800"
+            )}
+          >
+            {s}
+          </button>
+        ))}
+      </div>
+
       {/* Table */}
-      <div className="rounded-lg border border-zinc-800 overflow-hidden">
+      <div className="rounded-xl border border-stone-200 bg-white shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-zinc-800 bg-zinc-900/60">
-                <th className="text-left text-[11px] font-medium text-zinc-500 pb-3 pt-3 pl-4 cursor-pointer hover:text-zinc-300 transition-colors select-none" onClick={() => handleSort("event")}>
-                  Evento <SortIcon active={sortKey === "event"} dir={sortDir} />
+          <table className="w-full">
+            <thead className="border-b border-stone-200 bg-stone-50">
+              <tr>
+                <th
+                  onClick={() => handleSort("event")}
+                  className="text-left py-3.5 pl-5 pr-4 text-xs font-semibold text-stone-500 cursor-pointer hover:text-stone-800 select-none uppercase tracking-wider transition-colors"
+                >
+                  Evento
+                  <span className={cn("ml-1.5", sortKey === "event" ? "text-stone-700" : "text-stone-300")}>
+                    {sortKey === "event" ? (sortDir === "asc" ? "↑" : "↓") : "↕"}
+                  </span>
                 </th>
-                <th className="text-left text-[11px] font-medium text-zinc-500 pb-3 pt-3 cursor-pointer hover:text-zinc-300 transition-colors select-none" onClick={() => handleSort("sport")}>
-                  Deporte <SortIcon active={sortKey === "sport"} dir={sortDir} />
-                </th>
-                {colHeader("Back", "backOdds")}
-                {colHeader("Lay", "layOdds")}
-                {colHeader("Rating", "rating")}
-                {colHeader("Beneficio*", "profit")}
+                <Th label="Deporte" k="sport" />
+                <Th label="Back" k="backOdds" />
+                <Th label="Lay" k="layOdds" />
+                <Th label="Rating" k="rating" />
+                <Th label="Beneficio" k="profit" />
               </tr>
             </thead>
             <tbody>
-              {data.map((match, i) => {
+              {data.map((match) => {
                 const rating = (match.backOdds / match.layOdds) * 100
                 return (
-                  <tr
-                    key={match.id}
-                    className={cn(
-                      "border-b border-zinc-800/50 last:border-0 transition-colors",
-                      i % 2 === 0 ? "bg-transparent" : "bg-zinc-900/20",
-                      "hover:bg-zinc-800/30"
-                    )}
-                  >
-                    <td className="py-3 pl-4 pr-4">
-                      <span className="text-xs text-white font-medium">{match.event}</span>
+                  <tr key={match.id} className="border-b border-stone-100 last:border-0 hover:bg-stone-50/70 transition-colors">
+                    <td className="py-4 pl-5 pr-4">
+                      <span className="text-base font-medium text-stone-800">{match.event}</span>
                     </td>
-                    <td className="py-3 pr-4">
-                      <span className="text-xs text-zinc-400">{match.sport}</span>
+                    <td className="py-4 px-4">
+                      <span className="text-sm text-stone-500">{match.sport}</span>
                     </td>
-                    <td className="py-3 pr-4">
-                      <span className="text-xs font-mono text-white">{match.backOdds.toFixed(2)}</span>
+                    <td className="py-4 px-4">
+                      <span className="text-base font-mono font-semibold text-stone-800">{match.backOdds.toFixed(2)}</span>
                     </td>
-                    <td className="py-3 pr-4">
-                      <span className="text-xs font-mono text-zinc-300">{match.layOdds.toFixed(2)}</span>
+                    <td className="py-4 px-4">
+                      <span className="text-base font-mono text-stone-600">{match.layOdds.toFixed(2)}</span>
                     </td>
-                    <td className="py-3 pr-4">
-                      <span className={cn("text-xs font-mono font-semibold", ratingColor(rating))}>
+                    <td className="py-4 px-4">
+                      <span className={cn(
+                        "text-sm font-mono font-semibold px-2.5 py-1 rounded-full border",
+                        ratingStyle(rating)
+                      )}>
                         {rating.toFixed(1)}%
                       </span>
                     </td>
-                    <td className="py-3 pr-4">
-                      <span className="text-xs font-mono text-emerald-400">+€{match.profit.toFixed(2)}</span>
+                    <td className="py-4 px-4 pr-5">
+                      <span className="text-base font-mono font-bold text-emerald-600">+€{match.profit.toFixed(2)}</span>
                     </td>
                   </tr>
                 )
@@ -193,7 +180,7 @@ export default function OddsMatcherPage() {
         </div>
       </div>
 
-      <p className="mt-3 text-[10px] text-zinc-600">
+      <p className="mt-3 text-sm text-stone-400">
         * Beneficio estimado para una apuesta de €10 con comisión del 5%. Datos de ejemplo.
       </p>
     </div>

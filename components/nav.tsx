@@ -26,12 +26,12 @@ function IconCalculator({ className }: { className?: string }) {
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <rect x="4" y="2" width="16" height="20" rx="2" />
       <rect x="7" y="5" width="10" height="4" rx="1" />
-      <circle cx="8" cy="13" r="1" fill="currentColor" />
-      <circle cx="12" cy="13" r="1" fill="currentColor" />
-      <circle cx="16" cy="13" r="1" fill="currentColor" />
-      <circle cx="8" cy="17" r="1" fill="currentColor" />
-      <circle cx="12" cy="17" r="1" fill="currentColor" />
-      <circle cx="16" cy="17" r="1" fill="currentColor" />
+      <circle cx="8" cy="13" r="1" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="13" r="1" fill="currentColor" stroke="none" />
+      <circle cx="16" cy="13" r="1" fill="currentColor" stroke="none" />
+      <circle cx="8" cy="17" r="1" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="17" r="1" fill="currentColor" stroke="none" />
+      <circle cx="16" cy="17" r="1" fill="currentColor" stroke="none" />
     </svg>
   )
 }
@@ -70,13 +70,23 @@ export function Nav() {
 
   return (
     <>
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:flex flex-col fixed left-0 top-0 w-56 h-full border-r border-zinc-800 bg-zinc-950 z-30">
-        <div className="px-4 py-5 border-b border-zinc-800">
-          <div className="text-sm font-semibold text-white tracking-tight">Matched Betting</div>
-          <div className="text-xs text-zinc-500 mt-0.5">Herramientas Pro</div>
+      {/* Desktop Sidebar — dark */}
+      <aside className="hidden md:flex flex-col fixed left-0 top-0 w-56 h-full bg-stone-900 z-30">
+        {/* Brand */}
+        <div className="px-5 py-6 border-b border-stone-800">
+          <div
+            className="text-lg font-medium text-white leading-tight font-display"
+            style={{ fontStyle: "italic" }}
+          >
+            Matched Betting
+          </div>
+          <div className="text-xs text-stone-500 mt-1 font-sans uppercase tracking-widest">
+            Herramientas
+          </div>
         </div>
-        <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
+
+        {/* Nav links */}
+        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
           {navItems.map(({ href, label, icon: Icon }) => {
             const active = pathname === href
             return (
@@ -84,26 +94,27 @@ export function Nav() {
                 key={href}
                 href={href}
                 className={cn(
-                  "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors",
+                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
                   active
-                    ? "bg-zinc-800 text-white font-medium"
-                    : "text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100"
+                    ? "bg-stone-800 text-white border-l-2 border-emerald-500 pl-[10px]"
+                    : "text-stone-400 hover:bg-stone-800/60 hover:text-stone-100 border-l-2 border-transparent pl-[10px]"
                 )}
               >
-                <Icon className="size-4 shrink-0" />
+                <Icon className={cn("size-4 shrink-0", active ? "text-emerald-400" : "text-stone-500")} />
                 {label}
               </Link>
             )
           })}
         </nav>
-        <div className="px-4 py-4 border-t border-zinc-800">
-          <p className="text-[10px] text-zinc-600">v1.0 · Solo para uso educativo</p>
+
+        <div className="px-5 py-4 border-t border-stone-800">
+          <p className="text-xs text-stone-600">Solo para uso educativo</p>
         </div>
       </aside>
 
       {/* Mobile Bottom Nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 border-t border-zinc-800 bg-zinc-950 z-30 safe-area-inset-bottom">
-        <div className="flex items-center justify-around h-14">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-stone-900 border-t border-stone-800 z-30">
+        <div className="flex items-center justify-around h-16">
           {navItems.map(({ href, label, icon: Icon }) => {
             const active = pathname === href
             return (
@@ -111,12 +122,12 @@ export function Nav() {
                 key={href}
                 href={href}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-0.5 w-full h-full transition-colors",
-                  active ? "text-white" : "text-zinc-500 hover:text-zinc-300"
+                  "flex flex-col items-center justify-center gap-1 flex-1 h-full transition-colors",
+                  active ? "text-emerald-400" : "text-stone-500 hover:text-stone-300"
                 )}
               >
                 <Icon className="size-5" />
-                <span className="text-[10px] font-medium">{label}</span>
+                <span className="text-xs font-medium">{label}</span>
               </Link>
             )
           })}

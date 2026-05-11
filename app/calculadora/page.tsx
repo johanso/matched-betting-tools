@@ -39,51 +39,26 @@ function calcMoneyBack(backStake: number, backOdds: number, layOdds: number, com
   return { layStake, layLiability, profitBackWins, profitLayWins }
 }
 
-const fmt = (n: number) =>
-  (n >= 0 ? "+" : "") + n.toFixed(2)
-
-function ResultRow({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
-  const isPositive = value.startsWith("+")
-  const isNegative = value.startsWith("-")
-  return (
-    <div className={cn("flex items-center justify-between py-2.5 border-b border-zinc-800 last:border-0", highlight && "py-3")}>
-      <span className={cn("text-xs text-zinc-400", highlight && "text-zinc-300 font-medium")}>{label}</span>
-      <span
-        className={cn(
-          "text-sm font-mono font-semibold",
-          highlight ? "text-white text-base" : "",
-          isPositive && !highlight ? "text-emerald-400" : "",
-          isNegative && !highlight ? "text-red-400" : "",
-          !isPositive && !isNegative && !highlight ? "text-white" : ""
-        )}
-      >
-        {value}
-      </span>
-    </div>
-  )
-}
-
-function NumberInput({
-  label,
-  value,
-  onChange,
-  placeholder,
-  prefix,
-  suffix,
-}: {
+function Field({ label, value, onChange, placeholder, prefix, suffix, note }: {
   label: string
   value: string
   onChange: (v: string) => void
   placeholder?: string
   prefix?: string
   suffix?: string
+  note?: string
 }) {
   return (
     <div>
-      <label className="text-xs font-medium text-zinc-400 block mb-1.5">{label}</label>
-      <div className="relative flex items-center">
+      <div className="flex items-baseline justify-between mb-2">
+        <label className="text-sm font-medium text-stone-600">{label}</label>
+        {note && <span className="text-xs text-stone-400">{note}</span>}
+      </div>
+      <div className="relative">
         {prefix && (
-          <span className="absolute left-3 text-xs text-zinc-500 pointer-events-none font-mono">{prefix}</span>
+          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-stone-400 font-mono pointer-events-none">
+            {prefix}
+          </span>
         )}
         <input
           type="number"
@@ -93,14 +68,17 @@ function NumberInput({
           min="0"
           step="0.01"
           className={cn(
-            "w-full bg-zinc-900 border border-zinc-800 rounded-md py-2 text-sm font-mono text-white placeholder-zinc-700",
-            "focus:outline-none focus:ring-1 focus:ring-zinc-600 focus:border-zinc-600 transition-colors",
-            prefix ? "pl-7 pr-3" : "px-3",
-            suffix ? "pr-8" : ""
+            "w-full bg-white border border-stone-200 rounded-lg py-3 text-base font-mono text-stone-900",
+            "placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-200 focus:border-stone-400",
+            "transition-all shadow-sm",
+            prefix ? "pl-8 pr-4" : "px-4",
+            suffix ? "pr-10" : ""
           )}
         />
         {suffix && (
-          <span className="absolute right-3 text-xs text-zinc-500 pointer-events-none font-mono">{suffix}</span>
+          <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-sm text-stone-400 font-mono pointer-events-none">
+            {suffix}
+          </span>
         )}
       </div>
     </div>
@@ -108,9 +86,9 @@ function NumberInput({
 }
 
 const tabs: { id: Mode; label: string; desc: string }[] = [
-  { id: "qualifying", label: "Clasificatoria", desc: "Minimiza la pérdida" },
-  { id: "freebet", label: "Apuesta Gratis", desc: "Maximiza el beneficio" },
-  { id: "moneyback", label: "Reembolso", desc: "Calcula con cashback" },
+  { id: "qualifying", label: "Clasificatoria", desc: "Minimiza pérdida" },
+  { id: "freebet", label: "Apuesta Gratis", desc: "Maximiza beneficio" },
+  { id: "moneyback", label: "Reembolso", desc: "Con cashback" },
 ]
 
 export default function CalculadoraPage() {
@@ -126,9 +104,7 @@ export default function CalculadoraPage() {
     const bo = parseFloat(backOdds)
     const lo = parseFloat(layOdds)
     const comm = parseFloat(commission)
-
-    if (!bo || !lo || !comm || bo <= 1 || lo <= 1 || comm < 0 || lo <= comm / 100) return null
-
+    if (!bo || !lo || !comm || bo <= 1 || lo <= 1) return null
     if (mode === "qualifying") {
       const bs = parseFloat(backStake)
       if (!bs || bs <= 0) return null
@@ -148,130 +124,183 @@ export default function CalculadoraPage() {
     return null
   }, [mode, backOdds, layOdds, commission, backStake, freeBet, cashback])
 
+  const avgProfit = result ? (result.profitBackWins + result.profitLayWins) / 2 : null
+
+  function fmtProfit(n: number) {
+    return (n >= 0 ? "+" : "") + "€" + Math.abs(n).toFixed(2)
+  }
+
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-white">Calculadora</h1>
-        <p className="text-zinc-400 text-sm mt-1">Calcula el lay stake y beneficio esperado</p>
+      <div className="mb-8">
+        <p className="text-sm font-semibold text-stone-400 uppercase tracking-widest mb-3">Herramienta</p>
+        <h1
+          className="font-display text-3xl font-medium text-stone-900 tracking-tight md:text-4xl"
+          style={{ fontStyle: "italic" }}
+        >
+          Calculadora
+        </h1>
+        <p className="text-base text-stone-500 mt-2">Calcula el lay stake y beneficio esperado</p>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 p-1 bg-zinc-900 rounded-lg border border-zinc-800 mb-6">
+      <div className="flex gap-1 p-1.5 bg-stone-100 rounded-xl border border-stone-200 mb-6">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setMode(tab.id)}
             className={cn(
-              "flex-1 rounded-md px-3 py-2 text-xs font-medium transition-all text-center",
+              "flex-1 rounded-lg px-3 py-2.5 text-sm font-medium transition-all text-center",
               mode === tab.id
-                ? "bg-white text-black shadow-sm"
-                : "text-zinc-400 hover:text-zinc-200"
+                ? "bg-white text-stone-900 shadow-sm border border-stone-200"
+                : "text-stone-500 hover:text-stone-700"
             )}
           >
-            <div className="font-semibold">{tab.label}</div>
-            <div className={cn("text-[10px] font-normal mt-0.5 hidden sm:block", mode === tab.id ? "text-zinc-500" : "text-zinc-600")}>
+            <div>{tab.label}</div>
+            <div className={cn(
+              "text-xs font-normal mt-0.5 hidden sm:block",
+              mode === tab.id ? "text-stone-400" : "text-stone-400"
+            )}>
               {tab.desc}
             </div>
           </button>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Inputs */}
-        <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-5 space-y-4">
-          <h2 className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Datos</h2>
+        <div className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm space-y-5">
+          <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest">Datos de entrada</h2>
 
           {mode === "qualifying" && (
-            <NumberInput label="Apuesta Bookie (€)" value={backStake} onChange={setBackStake} prefix="€" placeholder="10.00" />
+            <Field label="Apuesta en el Bookie" value={backStake} onChange={setBackStake} prefix="€" placeholder="10.00" note="stake" />
           )}
           {mode === "freebet" && (
-            <NumberInput label="Valor Apuesta Gratis (€)" value={freeBet} onChange={setFreeBet} prefix="€" placeholder="10.00" />
+            <Field label="Valor de la Apuesta Gratis" value={freeBet} onChange={setFreeBet} prefix="€" placeholder="10.00" note="SNR" />
           )}
           {mode === "moneyback" && (
-            <NumberInput label="Apuesta Bookie (€)" value={backStake} onChange={setBackStake} prefix="€" placeholder="10.00" />
+            <Field label="Apuesta en el Bookie" value={backStake} onChange={setBackStake} prefix="€" placeholder="10.00" note="stake" />
           )}
 
-          <NumberInput label="Cuota Bookie (decimal)" value={backOdds} onChange={setBackOdds} placeholder="2.00" />
-          <NumberInput label="Cuota Exchange (lay)" value={layOdds} onChange={setLayOdds} placeholder="2.05" />
-          <NumberInput label="Comisión Exchange (%)" value={commission} onChange={setCommission} suffix="%" placeholder="5" />
+          <Field label="Cuota del Bookie" value={backOdds} onChange={setBackOdds} placeholder="2.00" note="decimal" />
+          <Field label="Cuota del Exchange (lay)" value={layOdds} onChange={setLayOdds} placeholder="2.05" note="decimal" />
 
-          {mode === "moneyback" && (
-            <NumberInput
-              label="Reembolso si pierde (€)"
-              value={cashback}
-              onChange={setCashback}
-              prefix="€"
-              placeholder="10.00"
-            />
-          )}
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="Comisión Exchange" value={commission} onChange={setCommission} suffix="%" placeholder="5" />
+            {mode === "moneyback" && (
+              <Field label="Reembolso si pierde" value={cashback} onChange={setCashback} prefix="€" placeholder="10.00" />
+            )}
+          </div>
         </div>
 
         {/* Results */}
-        <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-5">
-          <h2 className="text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-4">Resultados</h2>
+        <div className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
+          <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-5">Resultados</h2>
 
           {result ? (
-            <div>
-              <div className="mb-2">
-                <ResultRow label="Lay Stake" value={`€${result.layStake.toFixed(2)}`} />
-                <ResultRow label="Responsabilidad Lay" value={`€${result.layLiability.toFixed(2)}`} />
-              </div>
-              <div className="mt-1 pt-1">
-                <ResultRow
-                  label="Si gana el bookie"
-                  value={`€${fmt(result.profitBackWins)}`}
-                />
-                <ResultRow
-                  label="Si gana el exchange"
-                  value={`€${fmt(result.profitLayWins)}`}
-                />
-              </div>
-              <div className="mt-2 pt-2 border-t border-zinc-700">
-                <ResultRow
-                  label="Beneficio neto"
-                  value={`€${fmt((result.profitBackWins + result.profitLayWins) / 2)}`}
-                  highlight
-                />
+            <div className="space-y-5">
+              {/* Primary metrics */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-stone-50 rounded-xl p-4 border border-stone-100">
+                  <p className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">Lay Stake</p>
+                  <p className="text-3xl font-mono font-bold text-stone-900">€{result.layStake.toFixed(2)}</p>
+                </div>
+                <div className="bg-stone-50 rounded-xl p-4 border border-stone-100">
+                  <p className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">Responsabilidad</p>
+                  <p className="text-3xl font-mono font-bold text-stone-900">€{result.layLiability.toFixed(2)}</p>
+                </div>
               </div>
 
-              {mode === "freebet" && (
-                <div className="mt-3 rounded-md bg-emerald-950/40 border border-emerald-900/50 p-3">
-                  <p className="text-xs text-emerald-400">
-                    Retorno estimado:{" "}
-                    <span className="font-mono font-semibold">
-                      {((result.profitLayWins / parseFloat(freeBet || "1")) * 100).toFixed(1)}%
-                    </span>{" "}
-                    del valor de la apuesta gratis
-                  </p>
+              {/* Outcome scenarios */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between p-4 rounded-xl bg-stone-50 border border-stone-100">
+                  <div>
+                    <p className="text-sm font-medium text-stone-700">Si gana el bookie</p>
+                    <p className="text-xs text-stone-400 mt-0.5">Back gana · Lay pierde</p>
+                  </div>
+                  <span className={cn(
+                    "text-xl font-mono font-bold",
+                    result.profitBackWins >= 0 ? "text-emerald-600" : "text-red-500"
+                  )}>
+                    {fmtProfit(result.profitBackWins)}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between p-4 rounded-xl bg-stone-50 border border-stone-100">
+                  <div>
+                    <p className="text-sm font-medium text-stone-700">Si gana el exchange</p>
+                    <p className="text-xs text-stone-400 mt-0.5">Back pierde · Lay gana</p>
+                  </div>
+                  <span className={cn(
+                    "text-xl font-mono font-bold",
+                    result.profitLayWins >= 0 ? "text-emerald-600" : "text-red-500"
+                  )}>
+                    {fmtProfit(result.profitLayWins)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Net profit */}
+              <div className={cn(
+                "flex items-center justify-between p-4 rounded-xl border",
+                avgProfit !== null && avgProfit >= 0
+                  ? "bg-emerald-50 border-emerald-200"
+                  : "bg-red-50 border-red-200"
+              )}>
+                <p className={cn(
+                  "text-sm font-semibold",
+                  avgProfit !== null && avgProfit >= 0 ? "text-emerald-700" : "text-red-700"
+                )}>
+                  Beneficio neto esperado
+                </p>
+                <span className={cn(
+                  "text-2xl font-mono font-bold",
+                  avgProfit !== null && avgProfit >= 0 ? "text-emerald-700" : "text-red-600"
+                )}>
+                  {avgProfit !== null ? fmtProfit(avgProfit) : "—"}
+                </span>
+              </div>
+
+              {mode === "freebet" && result && (
+                <div className="text-center text-sm text-stone-500">
+                  Retorno de la apuesta gratis:{" "}
+                  <span className="font-mono font-semibold text-emerald-600">
+                    {((result.profitLayWins / Math.max(parseFloat(freeBet || "1"), 0.01)) * 100).toFixed(1)}%
+                  </span>
                 </div>
               )}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center h-40 text-center">
-              <div className="text-zinc-600 text-xs mb-1">Completa los campos para ver los resultados</div>
-              <div className="text-zinc-700 text-[10px]">Las cuotas deben ser mayores que 1.00</div>
+            <div className="flex flex-col items-center justify-center h-52 text-center gap-2">
+              <div className="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center mb-1">
+                <svg className="size-5 text-stone-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2z" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <p className="text-base text-stone-500">Completa los campos para ver resultados</p>
+              <p className="text-sm text-stone-400">Las cuotas deben ser mayores que 1.00</p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Formula Reference */}
-      <div className="mt-4 rounded-lg border border-zinc-800 bg-zinc-900/20 p-4">
-        <h3 className="text-xs font-semibold text-zinc-500 mb-2">Fórmula utilizada</h3>
+      {/* Formula reference */}
+      <div className="mt-5 rounded-xl border border-stone-200 bg-stone-50 px-6 py-4">
+        <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-2">Fórmula aplicada</p>
         {mode === "qualifying" && (
-          <p className="text-xs font-mono text-zinc-600">
+          <code className="text-sm font-mono text-stone-600">
             lay_stake = (cuota_back × apuesta) / (cuota_lay − comisión)
-          </p>
+          </code>
         )}
         {mode === "freebet" && (
-          <p className="text-xs font-mono text-zinc-600">
+          <code className="text-sm font-mono text-stone-600">
             lay_stake = ((cuota_back − 1) × apuesta_gratis) / (cuota_lay − comisión)
-          </p>
+          </code>
         )}
         {mode === "moneyback" && (
-          <p className="text-xs font-mono text-zinc-600">
-            lay_stake = (cuota_back × apuesta) / (cuota_lay − comisión) · El reembolso se suma al resultado lay
-          </p>
+          <code className="text-sm font-mono text-stone-600">
+            lay_stake = (cuota_back × apuesta) / (cuota_lay − comisión) — reembolso suma al resultado lay
+          </code>
         )}
       </div>
     </div>

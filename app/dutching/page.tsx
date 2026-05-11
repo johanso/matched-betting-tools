@@ -28,53 +28,50 @@ export default function DutchingPage() {
     setSelections((prev) => prev.filter((s) => s.id !== id))
   }
 
-  function updateSelection(id: number, field: "name" | "odds", value: string) {
+  function update(id: number, field: "name" | "odds", value: string) {
     setSelections((prev) => prev.map((s) => (s.id === id ? { ...s, [field]: value } : s)))
   }
 
   const result = useMemo(() => {
     const stake = parseFloat(totalStake)
     if (!stake || stake <= 0) return null
-
-    const valid = selections.filter((s) => {
-      const o = parseFloat(s.odds)
-      return o > 1
-    })
-
+    const valid = selections.filter((s) => parseFloat(s.odds) > 1)
     if (valid.length < 2) return null
-
     const oddsList = valid.map((s) => parseFloat(s.odds))
     const inverseSum = oddsList.reduce((sum, o) => sum + 1 / o, 0)
-    const overround = inverseSum * 100
     const c = stake / inverseSum
-
     const items = valid.map((s, i) => ({
       name: s.name || `Selección ${i + 1}`,
       odds: oddsList[i],
       stake: c / oddsList[i],
       return: c,
     }))
-
-    const profit = c - stake
-
-    return { items, overround, profit, breakEven: inverseSum < 1 }
+    return { items, overround: inverseSum * 100, profit: c - stake, returnValue: c }
   }, [totalStake, selections])
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-white">Dutching</h1>
-        <p className="text-zinc-400 text-sm mt-1">Distribuye tu apuesta para ganar lo mismo con cualquier resultado</p>
+      <div className="mb-8">
+        <p className="text-sm font-semibold text-stone-400 uppercase tracking-widest mb-3">Herramienta</p>
+        <h1
+          className="font-display text-3xl font-medium text-stone-900 tracking-tight md:text-4xl"
+          style={{ fontStyle: "italic" }}
+        >
+          Dutching
+        </h1>
+        <p className="text-base text-stone-500 mt-2">Distribuye tu apuesta para ganar lo mismo con cualquier resultado</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Inputs */}
-        <div className="space-y-4">
-          {/* Total stake */}
-          <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-5">
-            <label className="text-xs font-medium text-zinc-400 block mb-1.5">Apuesta total (€)</label>
+        <div className="space-y-5">
+          {/* Stake */}
+          <div className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
+            <label className="text-xs font-semibold text-stone-400 uppercase tracking-widest block mb-3">
+              Apuesta total
+            </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-zinc-500 font-mono">€</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base text-stone-400 font-mono">€</span>
               <input
                 type="number"
                 value={totalStake}
@@ -82,64 +79,60 @@ export default function DutchingPage() {
                 placeholder="50.00"
                 min="0"
                 step="0.01"
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-md pl-7 pr-3 py-2 text-sm font-mono text-white placeholder-zinc-700 focus:outline-none focus:ring-1 focus:ring-zinc-600 focus:border-zinc-600 transition-colors"
+                className="w-full bg-white border border-stone-200 rounded-xl pl-9 pr-4 py-4 text-2xl font-mono font-bold text-stone-900 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-200 focus:border-stone-400 transition-all shadow-sm"
               />
             </div>
           </div>
 
           {/* Selections */}
-          <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-5 space-y-3">
-            <div className="flex items-center justify-between mb-1">
-              <h2 className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">Selecciones</h2>
-              <span className="text-[10px] text-zinc-600">{selections.length} / 6</span>
+          <div className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest">Selecciones</h2>
+              <span className="text-sm font-mono text-stone-300">{selections.length} / 6</span>
             </div>
 
-            {selections.map((sel, i) => (
-              <div key={sel.id} className="flex gap-2 items-start">
-                <div className="flex-1 space-y-1.5">
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={sel.name}
-                      onChange={(e) => updateSelection(sel.id, "name", e.target.value)}
-                      placeholder={`Selección ${i + 1}`}
-                      className="flex-1 bg-zinc-900 border border-zinc-800 rounded-md px-3 py-2 text-xs text-white placeholder-zinc-700 focus:outline-none focus:ring-1 focus:ring-zinc-600 focus:border-zinc-600 transition-colors min-w-0"
-                    />
-                    <div className="relative w-24 shrink-0">
-                      <input
-                        type="number"
-                        value={sel.odds}
-                        onChange={(e) => updateSelection(sel.id, "odds", e.target.value)}
-                        placeholder="2.50"
-                        min="1.01"
-                        step="0.01"
-                        className="w-full bg-zinc-900 border border-zinc-800 rounded-md px-3 py-2 text-xs font-mono text-white placeholder-zinc-700 focus:outline-none focus:ring-1 focus:ring-zinc-600 focus:border-zinc-600 transition-colors"
-                      />
-                    </div>
-                  </div>
+            <div className="space-y-3">
+              {selections.map((sel, i) => (
+                <div key={sel.id} className="flex items-center gap-2">
+                  <span className="text-sm font-mono text-stone-300 w-5 shrink-0 text-center">{i + 1}</span>
+                  <input
+                    type="text"
+                    value={sel.name}
+                    onChange={(e) => update(sel.id, "name", e.target.value)}
+                    placeholder={`Selección ${i + 1}`}
+                    className="flex-1 bg-stone-50 border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-800 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-200 focus:border-stone-400 focus:bg-white transition-all min-w-0"
+                  />
+                  <input
+                    type="number"
+                    value={sel.odds}
+                    onChange={(e) => update(sel.id, "odds", e.target.value)}
+                    placeholder="2.50"
+                    min="1.01"
+                    step="0.01"
+                    className="w-24 shrink-0 bg-stone-50 border border-stone-200 rounded-lg px-3 py-2.5 text-sm font-mono text-stone-800 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-200 focus:border-stone-400 focus:bg-white transition-all text-center"
+                  />
+                  <button
+                    onClick={() => removeSelection(sel.id)}
+                    disabled={selections.length <= 2}
+                    className="shrink-0 p-2 text-stone-300 hover:text-red-400 disabled:opacity-20 disabled:cursor-not-allowed transition-colors rounded-lg hover:bg-red-50"
+                  >
+                    <svg className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
                 </div>
-                <button
-                  onClick={() => removeSelection(sel.id)}
-                  disabled={selections.length <= 2}
-                  className="mt-0.5 p-2 text-zinc-600 hover:text-red-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors rounded"
-                  title="Eliminar"
-                >
-                  <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
-                </button>
-              </div>
-            ))}
+              ))}
+            </div>
 
             <button
               onClick={addSelection}
               disabled={selections.length >= 6}
               className={cn(
-                "w-full py-2 rounded-md text-xs font-medium border transition-colors",
+                "mt-4 w-full py-3 rounded-xl text-sm font-medium border-2 border-dashed transition-all",
                 selections.length >= 6
-                  ? "border-zinc-800 text-zinc-700 cursor-not-allowed"
-                  : "border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200"
+                  ? "border-stone-100 text-stone-300 cursor-not-allowed"
+                  : "border-stone-200 text-stone-500 hover:border-stone-400 hover:text-stone-700 hover:bg-stone-50"
               )}
             >
               + Añadir selección
@@ -148,73 +141,88 @@ export default function DutchingPage() {
         </div>
 
         {/* Results */}
-        <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-5">
-          <h2 className="text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-4">Resultados</h2>
+        <div className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
+          <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-5">Distribución</h2>
 
           {result ? (
-            <div className="space-y-4">
+            <div className="space-y-5">
               {/* Per-selection table */}
-              <div className="rounded-md border border-zinc-800 overflow-hidden">
-                <table className="w-full text-xs">
+              <div className="rounded-xl border border-stone-100 overflow-hidden">
+                <table className="w-full">
                   <thead>
-                    <tr className="border-b border-zinc-800 bg-zinc-900/50">
-                      <th className="text-left text-[11px] text-zinc-500 font-medium px-3 py-2">Selección</th>
-                      <th className="text-right text-[11px] text-zinc-500 font-medium px-3 py-2">Cuota</th>
-                      <th className="text-right text-[11px] text-zinc-500 font-medium px-3 py-2">Apuesta</th>
-                      <th className="text-right text-[11px] text-zinc-500 font-medium px-3 py-2">Retorno</th>
+                    <tr className="bg-stone-50 border-b border-stone-100">
+                      <th className="text-left text-xs font-semibold text-stone-400 uppercase tracking-wider px-4 py-3">Selección</th>
+                      <th className="text-right text-xs font-semibold text-stone-400 uppercase tracking-wider px-4 py-3">Cuota</th>
+                      <th className="text-right text-xs font-semibold text-stone-400 uppercase tracking-wider px-4 py-3">Apuesta</th>
+                      <th className="text-right text-xs font-semibold text-stone-400 uppercase tracking-wider px-4 py-3">Retorno</th>
                     </tr>
                   </thead>
                   <tbody>
                     {result.items.map((item, i) => (
-                      <tr key={i} className="border-b border-zinc-800/50 last:border-0">
-                        <td className="px-3 py-2.5 text-white font-medium truncate max-w-[100px]">{item.name}</td>
-                        <td className="px-3 py-2.5 text-right font-mono text-zinc-300">{item.odds.toFixed(2)}</td>
-                        <td className="px-3 py-2.5 text-right font-mono text-white">€{item.stake.toFixed(2)}</td>
-                        <td className="px-3 py-2.5 text-right font-mono text-zinc-300">€{item.return.toFixed(2)}</td>
+                      <tr key={i} className="border-b border-stone-50 last:border-0">
+                        <td className="px-4 py-3.5 text-sm font-medium text-stone-800 max-w-[120px] truncate">{item.name}</td>
+                        <td className="px-4 py-3.5 text-right text-base font-mono text-stone-600">{item.odds.toFixed(2)}</td>
+                        <td className="px-4 py-3.5 text-right text-base font-mono font-bold text-stone-900">€{item.stake.toFixed(2)}</td>
+                        <td className="px-4 py-3.5 text-right text-base font-mono text-stone-600">€{item.return.toFixed(2)}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
 
-              {/* Summary */}
-              <div className="space-y-2 pt-1">
-                <div className="flex justify-between text-xs">
-                  <span className="text-zinc-500">Sobrerate total</span>
-                  <span className={cn("font-mono font-semibold", result.overround > 100 ? "text-red-400" : "text-emerald-400")}>
+              {/* Stats */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl bg-stone-50 border border-stone-100 p-4">
+                  <p className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-1.5">Sobrerate</p>
+                  <p className={cn(
+                    "text-2xl font-mono font-bold",
+                    result.overround <= 100 ? "text-emerald-600" : "text-red-500"
+                  )}>
                     {result.overround.toFixed(1)}%
-                  </span>
+                  </p>
+                  <p className="text-xs text-stone-400 mt-1">
+                    {result.overround <= 100 ? "Favorable" : "Desfavorable"}
+                  </p>
                 </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-zinc-500">Retorno por selección</span>
-                  <span className="font-mono text-white">€{(result.items[0]?.return ?? 0).toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between pt-2 border-t border-zinc-700">
-                  <span className="text-zinc-300 font-medium text-xs">Beneficio neto</span>
-                  <span
-                    className={cn(
-                      "font-mono font-semibold text-sm",
-                      result.profit >= 0 ? "text-emerald-400" : "text-red-400"
-                    )}
-                  >
-                    {result.profit >= 0 ? "+" : ""}€{result.profit.toFixed(2)}
-                  </span>
+                <div className="rounded-xl bg-stone-50 border border-stone-100 p-4">
+                  <p className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-1.5">Retorno fijo</p>
+                  <p className="text-2xl font-mono font-bold text-stone-900">€{result.returnValue.toFixed(2)}</p>
+                  <p className="text-xs text-stone-400 mt-1">por selección</p>
                 </div>
               </div>
 
-              {result.overround > 100 && (
-                <div className="rounded-md bg-red-950/30 border border-red-900/40 p-3">
-                  <p className="text-xs text-red-400">
-                    El sobrerate supera el 100% — el mercado no es favorable para dutching.
-                    Busca mercados con sobrerate por debajo del 100%.
+              {/* Net profit */}
+              <div className={cn(
+                "rounded-xl p-5 flex items-center justify-between border",
+                result.profit >= 0 ? "bg-emerald-50 border-emerald-200" : "bg-red-50 border-red-200"
+              )}>
+                <div>
+                  <p className={cn("text-sm font-semibold", result.profit >= 0 ? "text-emerald-700" : "text-red-700")}>
+                    Beneficio neto
+                  </p>
+                  <p className={cn("text-xs mt-1", result.profit >= 0 ? "text-emerald-500" : "text-red-500")}>
+                    {result.overround <= 100 ? "Mercado favorable para dutching" : "Sobrerate > 100% — mercado desfavorable"}
                   </p>
                 </div>
-              )}
+                <span className={cn(
+                  "text-3xl font-mono font-bold",
+                  result.profit >= 0 ? "text-emerald-700" : "text-red-600"
+                )}>
+                  {result.profit >= 0 ? "+" : "−"}€{Math.abs(result.profit).toFixed(2)}
+                </span>
+              </div>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center h-48 text-center">
-              <div className="text-zinc-600 text-xs mb-1">Introduce la apuesta total y al menos 2 selecciones</div>
-              <div className="text-zinc-700 text-[10px]">Las cuotas deben ser mayores que 1.00</div>
+            <div className="flex flex-col items-center justify-center h-64 text-center gap-2">
+              <div className="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center mb-2">
+                <svg className="size-5 text-stone-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+              </div>
+              <p className="text-base text-stone-500">Introduce la apuesta total y al menos 2 selecciones</p>
+              <p className="text-sm text-stone-400">Las cuotas deben ser mayores que 1.00</p>
             </div>
           )}
         </div>
